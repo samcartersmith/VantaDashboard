@@ -59,7 +59,7 @@ export function Home() {
       </div>
 
       <div className="mt-4">
-        <MetricsStrip scoped={scoped} all={items} />
+        <MetricsStrip />
       </div>
 
       {isLeadership ? (

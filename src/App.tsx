@@ -1,7 +1,8 @@
 import { useAppStore } from "./store/useAppStore";
 import { Sidebar } from "./components/layout/Sidebar";
+import { TopBar } from "./components/layout/TopBar";
 import { Home } from "./components/home/Home";
-import { DetailPanel } from "./components/home/DetailPanel";
+import { ModalRoot } from "./components/home/ModalRoot";
 import { PlaceholderPage } from "./pages/PlaceholderPage";
 
 const NAV_TITLES: Record<string, string> = {
@@ -27,16 +28,19 @@ export default function App() {
   const currentNav = useAppStore((s) => s.currentNav);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-stone-100">
-      <Sidebar />
-      <main className="flex-1 overflow-y-auto thin-scroll">
-        {currentNav === "home" ? (
-          <Home />
-        ) : (
-          <PlaceholderPage title={NAV_TITLES[currentNav] ?? "Vanta"} />
-        )}
-      </main>
-      <DetailPanel />
+    <div className="flex h-screen flex-col overflow-hidden bg-[#f6f4f0]">
+      <TopBar />
+      <div className="flex flex-1 overflow-hidden">
+        <Sidebar />
+        <main className="flex-1 overflow-y-auto thin-scroll">
+          {currentNav === "home" ? (
+            <Home />
+          ) : (
+            <PlaceholderPage title={NAV_TITLES[currentNav] ?? "Vanta"} />
+          )}
+        </main>
+      </div>
+      <ModalRoot />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Check, Clock, Play, UserPlus2 } from "lucide-react";
 import type { ActionableItem } from "../../data/types";
 import { useAppStore } from "../../store/useAppStore";
@@ -15,31 +15,35 @@ import {
   SeverityDot,
   StatusBadge,
 } from "../common/atoms";
+import { Tooltip } from "../common/Tooltip";
 import { SnoozeDialog } from "./SnoozeDialog";
 import { ReassignMenu } from "./ReassignMenu";
 
 function IconBtn({
-  title,
+  label,
   onClick,
   children,
   tone = "default",
 }: {
-  title: string;
+  label: string;
   onClick: (e: React.MouseEvent) => void;
   children: React.ReactNode;
   tone?: "default" | "success";
 }) {
   return (
-    <button
-      title={title}
-      aria-label={title}
-      onClick={onClick}
-      className={`inline-flex h-7 w-7 items-center justify-center rounded-md border border-stone-200 bg-white text-stone-500 transition-colors hover:bg-stone-50 ${
-        tone === "success" ? "hover:border-emerald-200 hover:text-emerald-600" : ""
-      }`}
-    >
-      {children}
-    </button>
+    <Tooltip label={label}>
+      <button
+        aria-label={label}
+        onClick={onClick}
+        className={`inline-flex h-7 w-7 items-center justify-center rounded-md border border-stone-200 bg-white text-stone-500 transition-colors hover:bg-stone-50 ${
+          tone === "success"
+            ? "hover:border-emerald-200 hover:text-emerald-600"
+            : ""
+        }`}
+      >
+        {children}
+      </button>
+    </Tooltip>
   );
 }
 
@@ -50,8 +54,8 @@ export function ActionRow({
   item: ActionableItem;
   selectable: boolean;
 }) {
-  const openItem = useAppStore((s) => s.openItem);
-  const activeItemId = useAppStore((s) => s.activeItemId);
+  const openTicket = useAppStore((s) => s.openTicket);
+  const modal = useAppStore((s) => s.modal);
   const selection = useAppStore((s) => s.selection);
   const toggleSelect = useAppStore((s) => s.toggleSelect);
   const resolveItem = useAppStore((s) => s.resolveItem);
@@ -61,9 +65,11 @@ export function ActionRow({
 
   const [showSnooze, setShowSnooze] = useState(false);
   const [showReassign, setShowReassign] = useState(false);
+  const reassignAnchor = useRef<HTMLDivElement>(null);
 
   const selected = selection.has(item.actionable_item_id);
-  const isOpen = activeItemId === item.actionable_item_id;
+  const isOpen =
+    modal?.kind === "ticket" && modal.id === item.actionable_item_id;
   const overdue = isOverdue(item.due_date) && item.status !== "RESOLVED";
   const score = scoreOf(item);
   const band = urgencyBand(score);
@@ -78,7 +84,7 @@ export function ActionRow({
 
   return (
     <div
-      onClick={() => openItem(item.actionable_item_id)}
+      onClick={() => openTicket(item.actionable_item_id)}
       className={`group relative flex cursor-pointer items-center gap-3 border-b border-stone-100 px-3 py-2.5 last:border-b-0 ${
         isOpen ? "bg-brand-50" : "hover:bg-stone-50"
       } ${resolved ? "opacity-60" : ""}`}
@@ -115,7 +121,7 @@ export function ActionRow({
         <div className="absolute right-28 hidden items-center gap-1 group-hover:flex">
           {item.status !== "IN_PROGRESS" && (
             <IconBtn
-              title="Start"
+              label="Start — mark in progress"
               onClick={(e) => {
                 e.stopPropagation();
                 startItem(item.actionable_item_id);
@@ -124,9 +130,9 @@ export function ActionRow({
               <Play size={13} />
             </IconBtn>
           )}
-          <div className="relative">
+          <div className="relative" ref={reassignAnchor}>
             <IconBtn
-              title="Reassign"
+              label="Reassign to a person or team"
               onClick={(e) => {
                 e.stopPropagation();
                 setShowReassign((s) => !s);
@@ -136,6 +142,7 @@ export function ActionRow({
             </IconBtn>
             {showReassign && (
               <ReassignMenu
+                anchorRef={reassignAnchor}
                 align="right"
                 onSelect={(a) => reassign(item.actionable_item_id, a)}
                 onClose={() => setShowReassign(false)}
@@ -143,7 +150,7 @@ export function ActionRow({
             )}
           </div>
           <IconBtn
-            title="Snooze"
+            label="Snooze with an audit note"
             onClick={(e) => {
               e.stopPropagation();
               setShowSnooze(true);
@@ -152,7 +159,7 @@ export function ActionRow({
             <Clock size={13} />
           </IconBtn>
           <IconBtn
-            title="Resolve"
+            label="Resolve — remediation verified"
             tone="success"
             onClick={(e) => {
               e.stopPropagation();

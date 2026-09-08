@@ -4,20 +4,27 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Vanta violet
         brand: {
-          DEFAULT: "#5b4ef0",
-          50: "#eeedfe",
-          100: "#cecbf6",
-          200: "#afa9ec",
-          400: "#7f77dd",
-          600: "#534ab7",
-          700: "#3c3489",
+          DEFAULT: "#7c3aed",
+          50: "#f5f0ff",
+          100: "#e9d8fd",
+          200: "#d6bcfa",
+          400: "#a78bfa",
+          600: "#6d28d9",
+          700: "#5b21b6",
+        },
+        // Deep plum (marketing / dark surfaces)
+        plum: {
+          900: "#1e1035",
+          800: "#2a1a4a",
+          700: "#3b2565",
         },
         ink: {
-          900: "#0b0b0f",
-          800: "#16161d",
-          700: "#22222c",
-          600: "#33333f",
+          900: "#14121a",
+          800: "#1f1b28",
+          700: "#2b2636",
+          600: "#3a3448",
         },
         sev: {
           critical: "#e24b4a",
