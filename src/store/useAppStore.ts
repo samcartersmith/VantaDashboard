@@ -10,8 +10,14 @@ import type {
 } from "../data/types";
 import { SEED_ITEMS } from "../data/seed";
 import { CURRENT_USER_ID, assigneeLabel } from "../data/people";
+import type { MetricKey } from "../lib/metrics";
 
 export type SortKey = "SMART" | "DUE" | "SEVERITY" | "CREATED";
+
+// The centered modal shows either a ticket's detail or a metric's item list.
+export type Modal =
+  | { kind: "ticket"; id: string; backKey?: MetricKey }
+  | { kind: "metric"; key: MetricKey };
 
 export interface Filters {
   domains: Set<Domain>;
@@ -53,13 +59,15 @@ interface AppState {
   sort: SortKey;
   filters: Filters;
   selection: Set<string>; // bulk-select ids
-  activeItemId: string | null; // detail panel
+  modal: Modal | null; // centered detail / list modal
   currentNav: string;
 
   setRole: (role: Role) => void;
   setSort: (sort: SortKey) => void;
   setNav: (nav: string) => void;
-  openItem: (id: string | null) => void;
+  openTicket: (id: string, backKey?: MetricKey) => void;
+  openMetric: (key: MetricKey) => void;
+  closeModal: () => void;
 
   toggleFilterValue: <K extends "domains" | "severities" | "frameworks" | "statuses">(
     key: K,
@@ -106,20 +114,29 @@ function daysToIso(days: number): string {
   return d.toISOString();
 }
 
+// Close the modal when the ticket being acted on is the one it's showing.
+function closeIfTicket(modal: Modal | null, id: string): Modal | null {
+  if (modal?.kind === "ticket" && modal.id === id) return null;
+  return modal;
+}
+
 export const useAppStore = create<AppState>((set) => ({
   items: SEED_ITEMS,
   role: "MY_ACTIONS",
   sort: "SMART",
   filters: emptyFilters(),
   selection: new Set(),
-  activeItemId: null,
+  modal: null,
   currentNav: "home",
 
   setRole: (role) =>
-    set(() => ({ role, selection: new Set(), activeItemId: null })),
+    set(() => ({ role, selection: new Set(), modal: null })),
   setSort: (sort) => set(() => ({ sort })),
   setNav: (currentNav) => set(() => ({ currentNav })),
-  openItem: (id) => set(() => ({ activeItemId: id })),
+  openTicket: (id, backKey) =>
+    set(() => ({ modal: { kind: "ticket", id, backKey } })),
+  openMetric: (key) => set(() => ({ modal: { kind: "metric", key } })),
+  closeModal: () => set(() => ({ modal: null })),
 
   toggleFilterValue: (key, value) =>
     set((state) => {
@@ -157,6 +174,7 @@ export const useAppStore = create<AppState>((set) => ({
           "Marked resolved. Remediation verified."
         )
       ),
+      modal: closeIfTicket(state.modal, id),
     })),
   startItem: (id) =>
     set((state) => ({
@@ -169,6 +187,7 @@ export const useAppStore = create<AppState>((set) => ({
       items: updateOne(state.items, id, (it) =>
         stamp({ ...it, status: "DISMISSED" }, "Dismissed.")
       ),
+      modal: closeIfTicket(state.modal, id),
     })),
   snoozeItem: (id, note, days) =>
     set((state) => ({

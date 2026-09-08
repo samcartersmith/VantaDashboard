@@ -16,7 +16,7 @@ import {
   Plug,
   HelpCircle,
   UserCircle,
-  ChevronLeft,
+  PanelLeftClose,
   type LucideIcon,
 } from "lucide-react";
 import { useAppStore } from "../../store/useAppStore";
@@ -77,13 +77,16 @@ function NavRow({ item }: { item: NavItem }) {
   return (
     <button
       onClick={() => setNav(item.id)}
-      className={`flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] transition-colors ${
+      className={`relative flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] transition-colors ${
         active
-          ? "bg-brand text-white"
-          : "text-stone-300 hover:bg-ink-700 hover:text-white"
+          ? "bg-brand-50 font-medium text-brand-700"
+          : "text-stone-600 hover:bg-stone-100 hover:text-stone-900"
       }`}
     >
-      <Icon size={15} className="shrink-0" />
+      {active && (
+        <span className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-brand" />
+      )}
+      <Icon size={16} className="shrink-0" />
       <span className="truncate">{item.label}</span>
     </button>
   );
@@ -91,18 +94,12 @@ function NavRow({ item }: { item: NavItem }) {
 
 export function Sidebar() {
   return (
-    <aside className="flex w-[188px] shrink-0 flex-col bg-ink-900 px-2.5 py-3.5 text-stone-300">
-      <div className="mb-3 flex items-center justify-between px-1.5">
-        <span className="font-serif text-[19px] font-semibold tracking-tight text-white">
-          Vanta
-        </span>
-        <ChevronLeft size={15} className="text-stone-500" />
-      </div>
+    <aside className="flex w-[212px] shrink-0 flex-col border-r border-stone-200 bg-white px-2.5 py-3">
       <nav className="flex-1 space-y-0.5 overflow-y-auto thin-scroll">
         {SECTIONS.map((section, i) => (
           <div key={i} className="pb-1">
             {section.heading && (
-              <div className="px-2 pb-1 pt-3 text-[10px] font-medium tracking-wider text-stone-500">
+              <div className="px-2.5 pb-1 pt-3 text-[10px] font-semibold tracking-wider text-stone-400">
                 {section.heading}
               </div>
             )}
@@ -112,10 +109,13 @@ export function Sidebar() {
           </div>
         ))}
       </nav>
-      <div className="mt-2 space-y-0.5 border-t border-ink-700 pt-2">
+      <div className="mt-2 space-y-0.5 border-t border-stone-200 pt-2">
         {FOOTER.map((item) => (
           <NavRow key={item.id} item={item} />
         ))}
+        <div className="flex justify-end px-2 pt-1">
+          <PanelLeftClose size={15} className="text-stone-400" />
+        </div>
       </div>
     </aside>
   );

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { CheckCircle2, Clock, Inbox, UserPlus2, X } from "lucide-react";
 import type { ActionableItem } from "../../data/types";
 import { useAppStore } from "../../store/useAppStore";
@@ -13,6 +13,7 @@ function BulkBar({ ids }: { ids: string[] }) {
   const bulkReassign = useAppStore((s) => s.bulkReassign);
   const [showSnooze, setShowSnooze] = useState(false);
   const [showReassign, setShowReassign] = useState(false);
+  const reassignAnchor = useRef<HTMLDivElement>(null);
 
   return (
     <div className="flex items-center gap-2 border-b border-brand-100 bg-brand-50 px-3 py-2">
@@ -32,7 +33,7 @@ function BulkBar({ ids }: { ids: string[] }) {
         >
           <Clock size={13} className="text-amber-500" /> Snooze
         </button>
-        <div className="relative">
+        <div className="relative" ref={reassignAnchor}>
           <button
             onClick={() => setShowReassign((s) => !s)}
             className="inline-flex items-center gap-1 rounded-md border border-stone-200 bg-white px-2 py-1 text-[12px] text-stone-700 hover:bg-stone-50"
@@ -41,6 +42,7 @@ function BulkBar({ ids }: { ids: string[] }) {
           </button>
           {showReassign && (
             <ReassignMenu
+              anchorRef={reassignAnchor}
               onSelect={(a) => bulkReassign(ids, a)}
               onClose={() => setShowReassign(false)}
             />
