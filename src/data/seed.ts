@@ -717,10 +717,33 @@ const specs: Spec[] = [
   },
 ];
 
+// One-sentence AI root-cause summaries (demo), keyed by source entity id.
+const ROOT_CAUSES: Record<string, string> = {
+  chk_9921:
+    "A Terraform module default left the bucket ACL public; the policy guardrail that should block public S3 isn't applied to this account.",
+  chk_7740:
+    "The instance predates the encryption-by-default policy and was never re-provisioned, so storage encryption was never enabled.",
+  off_3310:
+    "HRIS marked termination, but the deprovisioning workflow never fired for Okta and AWS — offboarding automation is disconnected from those two systems.",
+  rev_5501:
+    "The review owner changed teams and the recurring reminder still routed to their old address, so the quarterly review lapsed.",
+  ven_8820:
+    "Amplitude was added through self-serve signup that bypassed the procurement intake, so no DPA was ever requested.",
+  chk_6104:
+    "The three admins were created before conditional-access enforcement and were never swept into the MFA policy group.",
+  chk_8125:
+    "A legacy CI pipeline still authenticates with the root access key; it was never migrated to a scoped IAM role.",
+  chk_9440:
+    "A debug logger added during an incident logs raw request bodies, capturing unmasked PAN data in application logs.",
+  sec_1120:
+    "Six recent hires were provisioned before the training assignment rule ran, so the course was never assigned to them.",
+};
+
 export const SEED_ITEMS: ActionableItem[] = specs.map((s) =>
   mk({
     domain_source: s.domain,
     source_entity_id: s.entity.split("/")[1],
+    ai_root_cause: ROOT_CAUSES[s.entity.split("/")[1]],
     title: s.title,
     description: s.description,
     severity: s.severity,

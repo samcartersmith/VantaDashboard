@@ -59,6 +59,7 @@ export interface ActionableItem {
   created_at: string; // ISO
   snooze?: { until: string; note: string };
   activity: ActivityEntry[];
+  ai_root_cause?: string; // one-sentence AI root-cause summary (demo)
 }
 
 export interface Person {

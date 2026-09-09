@@ -7,19 +7,23 @@ import {
   ChevronDown,
   Search,
 } from "lucide-react";
+import { useAppStore } from "../../store/useAppStore";
 
 function IconButton({
   label,
   children,
   dot,
+  onClick,
 }: {
   label: string;
   children: React.ReactNode;
   dot?: boolean;
+  onClick?: () => void;
 }) {
   return (
     <button
       aria-label={label}
+      onClick={onClick}
       className="relative inline-flex h-8 w-8 items-center justify-center rounded-md text-stone-500 hover:bg-stone-100 hover:text-stone-700"
     >
       {children}
@@ -31,6 +35,7 @@ function IconButton({
 }
 
 export function TopBar() {
+  const toggleAgent = useAppStore((s) => s.toggleAgent);
   return (
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-stone-200 bg-white px-4">
       {/* Brand + workspace switcher */}
@@ -66,7 +71,7 @@ export function TopBar() {
 
       {/* Right actions */}
       <div className="ml-auto flex items-center gap-0.5">
-        <IconButton label="Vanta AI">
+        <IconButton label="Vanta AI" onClick={toggleAgent}>
           <Sparkles size={17} />
         </IconButton>
         <IconButton label="Help">

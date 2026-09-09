@@ -13,15 +13,15 @@ import { LeadershipView } from "../leadership/LeadershipView";
 const ROLE_COPY: Record<string, { title: string; sub: string }> = {
   MY_ACTIONS: {
     title: "My actions",
-    sub: "Your assigned compliance work, sorted by audit urgency.",
+    sub: "Your assigned work, organized your way.",
   },
   PROGRAM_QUEUE: {
     title: "Program queue",
-    sub: "Every open item across the program — triage, assign, and track SLAs.",
+    sub: "Every open item across your program — triage, assign, and route.",
   },
   LEADERSHIP: {
     title: "Leadership overview",
-    sub: "Program health, remediation velocity, and audit-blocking bottlenecks.",
+    sub: "Program health, resolution velocity, and where work is stacking up.",
   },
 };
 
