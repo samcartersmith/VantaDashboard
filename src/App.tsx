@@ -3,6 +3,8 @@ import { Sidebar } from "./components/layout/Sidebar";
 import { TopBar } from "./components/layout/TopBar";
 import { Home } from "./components/home/Home";
 import { ModalRoot } from "./components/home/ModalRoot";
+import { AgentFab } from "./components/agent/AgentFab";
+import { VantaAgentDrawer } from "./components/agent/VantaAgentDrawer";
 import { PlaceholderPage } from "./pages/PlaceholderPage";
 
 const NAV_TITLES: Record<string, string> = {
@@ -41,6 +43,8 @@ export default function App() {
         </main>
       </div>
       <ModalRoot />
+      <AgentFab />
+      <VantaAgentDrawer />
     </div>
   );
 }

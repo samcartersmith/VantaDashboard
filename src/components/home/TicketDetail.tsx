@@ -27,6 +27,7 @@ import {
   StatusBadge,
 } from "../common/atoms";
 import { Tooltip } from "../common/Tooltip";
+import { SparkleIcon } from "../agent/SparkleIcon";
 import { SnoozeDialog } from "./SnoozeDialog";
 import { ReassignMenu } from "./ReassignMenu";
 
@@ -121,6 +122,23 @@ export function TicketDetail({
         <p className="mt-3 text-[13px] leading-relaxed text-stone-600">
           {item.description}
         </p>
+
+        {item.ai_root_cause && (
+          <div className="mt-3 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2.5">
+            <div className="mb-1 flex items-center gap-1.5">
+              <SparkleIcon size={14} />
+              <span className="text-[11px] font-semibold text-brand-700">
+                AI root cause
+              </span>
+              <span className="rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-700">
+                Preview
+              </span>
+            </div>
+            <p className="text-[12px] leading-relaxed text-brand-700">
+              {item.ai_root_cause}
+            </p>
+          </div>
+        )}
 
         {!resolved && (
           <button
