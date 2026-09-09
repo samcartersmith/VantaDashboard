@@ -4,6 +4,7 @@ import {
   Clock3,
   Gauge,
   TrendingDown,
+  CircleCheckBig,
   type LucideIcon,
 } from "lucide-react";
 import type { ActionableItem } from "../../data/types";
@@ -130,6 +131,19 @@ export function LeadershipView({ items }: { items: ActionableItem[] }) {
 
   return (
     <div className="space-y-4">
+      {stats.auditBlockingCount === 0 && (
+        <div className="flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+          <CircleCheckBig size={18} className="shrink-0 text-emerald-600" />
+          <div>
+            <div className="text-[13px] font-semibold text-emerald-800">
+              Audit-ready
+            </div>
+            <div className="text-[12px] text-emerald-700">
+              No audit-blocking items open across the program.
+            </div>
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-4 gap-3">
         <BigStat
           icon={Gauge}

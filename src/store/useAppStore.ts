@@ -19,6 +19,38 @@ export type Modal =
   | { kind: "ticket"; id: string; backKey?: MetricKey }
   | { kind: "metric"; key: MetricKey };
 
+export type Density = "COMFORTABLE" | "COMPACT";
+
+const DENSITY_KEY = "vanta.density";
+const DENSITY_TOUCHED_KEY = "vanta.densityTouched";
+
+function roleDensity(role: Role): Density {
+  return role === "PROGRAM_QUEUE" ? "COMPACT" : "COMFORTABLE";
+}
+
+function readLS(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+function writeLS(key: string, value: string) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    /* storage unavailable — ignore */
+  }
+}
+
+const initialDensityTouched = readLS(DENSITY_TOUCHED_KEY) === "1";
+const storedDensity = readLS(DENSITY_KEY);
+const initialDensity: Density =
+  initialDensityTouched &&
+  (storedDensity === "COMPACT" || storedDensity === "COMFORTABLE")
+    ? (storedDensity as Density)
+    : roleDensity("MY_ACTIONS");
+
 export interface Filters {
   domains: Set<Domain>;
   severities: Set<Severity>;
@@ -61,10 +93,19 @@ interface AppState {
   selection: Set<string>; // bulk-select ids
   modal: Modal | null; // centered detail / list modal
   currentNav: string;
+  density: Density;
+  densityTouched: boolean; // user manually overrode the role default
+  focusedId: string | null; // keyboard-focused row
+  snoozeTargetId: string | null; // keyboard-driven snooze dialog
+  reassignTargetId: string | null; // keyboard-driven reassign menu
 
   setRole: (role: Role) => void;
   setSort: (sort: SortKey) => void;
   setNav: (nav: string) => void;
+  setDensity: (density: Density) => void;
+  setFocused: (id: string | null) => void;
+  setSnoozeTarget: (id: string | null) => void;
+  setReassignTarget: (id: string | null) => void;
   openTicket: (id: string, backKey?: MetricKey) => void;
   openMetric: (key: MetricKey) => void;
   closeModal: () => void;
@@ -128,11 +169,30 @@ export const useAppStore = create<AppState>((set) => ({
   selection: new Set(),
   modal: null,
   currentNav: "home",
+  density: initialDensity,
+  densityTouched: initialDensityTouched,
+  focusedId: null,
+  snoozeTargetId: null,
+  reassignTargetId: null,
 
   setRole: (role) =>
-    set(() => ({ role, selection: new Set(), modal: null })),
+    set((state) => ({
+      role,
+      selection: new Set(),
+      modal: null,
+      focusedId: null,
+      density: state.densityTouched ? state.density : roleDensity(role),
+    })),
   setSort: (sort) => set(() => ({ sort })),
   setNav: (currentNav) => set(() => ({ currentNav })),
+  setDensity: (density) => {
+    writeLS(DENSITY_KEY, density);
+    writeLS(DENSITY_TOUCHED_KEY, "1");
+    set(() => ({ density, densityTouched: true }));
+  },
+  setFocused: (focusedId) => set(() => ({ focusedId })),
+  setSnoozeTarget: (snoozeTargetId) => set(() => ({ snoozeTargetId })),
+  setReassignTarget: (reassignTargetId) => set(() => ({ reassignTargetId })),
   openTicket: (id, backKey) =>
     set(() => ({ modal: { kind: "ticket", id, backKey } })),
   openMetric: (key) => set(() => ({ modal: { kind: "metric", key } })),

@@ -1,4 +1,10 @@
-import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 import { createPortal } from "react-dom";
 import type { Assignee } from "../../data/types";
 import { PEOPLE, TEAMS } from "../../data/people";
@@ -12,9 +18,35 @@ interface Pos {
   openUp: boolean;
 }
 
+interface Option {
+  assignee: Assignee;
+  name: string;
+  initials: string;
+  role?: string;
+  team: boolean;
+}
+
+// Flat, keyboard-navigable option list: teams first, then people.
+const OPTIONS: Option[] = [
+  ...TEAMS.map((t) => ({
+    assignee: { type: "TEAM" as const, id: t.id },
+    name: t.name,
+    initials: t.initials,
+    team: true,
+  })),
+  ...PEOPLE.map((p) => ({
+    assignee: { type: "USER" as const, id: p.id },
+    name: p.name,
+    initials: p.initials,
+    role: p.role,
+    team: false,
+  })),
+];
+const FIRST_PERSON_IDX = TEAMS.length;
+
 // Portal-based reassign menu, positioned against a trigger element so it
-// never gets clipped by an overflow ancestor, and flips up when near the
-// bottom of the viewport.
+// never gets clipped by an overflow ancestor, flips up near the viewport
+// bottom, and is fully keyboard-navigable (↑/↓ move, Enter selects, Esc closes).
 export function ReassignMenu({
   anchorRef,
   onSelect,
@@ -28,6 +60,7 @@ export function ReassignMenu({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<Pos | null>(null);
+  const [active, setActive] = useState(0);
 
   useLayoutEffect(() => {
     const a = anchorRef.current;
@@ -41,6 +74,18 @@ export function ReassignMenu({
       openUp,
     });
   }, [anchorRef, align]);
+
+  // Move focus into the menu once it's positioned so it captures keystrokes.
+  useEffect(() => {
+    if (pos) ref.current?.focus({ preventScroll: true });
+  }, [pos]);
+
+  // Keep the highlighted option scrolled into view.
+  useEffect(() => {
+    ref.current
+      ?.querySelector(`[data-idx="${active}"]`)
+      ?.scrollIntoView({ block: "nearest" });
+  }, [active]);
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -58,11 +103,50 @@ export function ReassignMenu({
     onClose();
   }
 
+  function onKeyDown(e: React.KeyboardEvent) {
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        e.stopPropagation();
+        setActive((i) => (i + 1) % OPTIONS.length);
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        e.stopPropagation();
+        setActive((i) => (i - 1 + OPTIONS.length) % OPTIONS.length);
+        break;
+      case "Home":
+        e.preventDefault();
+        e.stopPropagation();
+        setActive(0);
+        break;
+      case "End":
+        e.preventDefault();
+        e.stopPropagation();
+        setActive(OPTIONS.length - 1);
+        break;
+      case "Enter":
+        e.preventDefault();
+        e.stopPropagation();
+        pick(OPTIONS[active].assignee);
+        break;
+      case "Escape":
+        e.preventDefault();
+        e.stopPropagation();
+        onClose();
+        break;
+    }
+  }
+
   if (!pos) return null;
 
   return createPortal(
     <div
       ref={ref}
+      tabIndex={-1}
+      role="listbox"
+      aria-label="Reassign to"
+      onKeyDown={onKeyDown}
       style={{
         position: "fixed",
         left: pos.left,
@@ -73,39 +157,43 @@ export function ReassignMenu({
           pos.openUp ? "translateY(-100%)" : ""
         }`.trim(),
       }}
-      className="z-[100] overflow-y-auto rounded-lg border border-stone-200 bg-white p-1 shadow-xl thin-scroll"
+      className="z-[100] overflow-y-auto rounded-lg border border-stone-200 bg-white p-1 shadow-xl outline-none thin-scroll"
     >
       <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-stone-400">
         Teams
       </div>
-      {TEAMS.map((t) => (
-        <button
-          key={t.id}
-          onClick={() => pick({ type: "TEAM", id: t.id })}
-          className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-stone-700 hover:bg-stone-50"
-        >
-          <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 text-[9px] font-semibold text-brand-700">
-            {t.initials}
-          </span>
-          {t.name}
-        </button>
-      ))}
-      <div className="px-2 py-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-stone-400">
-        People
-      </div>
-      {PEOPLE.map((p) => (
-        <button
-          key={p.id}
-          onClick={() => pick({ type: "USER", id: p.id })}
-          className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-stone-700 hover:bg-stone-50"
-        >
-          <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-stone-200 text-[9px] font-semibold text-stone-700">
-            {p.initials}
-          </span>
-          <span className="truncate">
-            {p.name} <span className="text-stone-400">· {p.role}</span>
-          </span>
-        </button>
+      {OPTIONS.map((o, i) => (
+        <div key={`${o.assignee.type}-${o.assignee.id}`}>
+          {i === FIRST_PERSON_IDX && (
+            <div className="px-2 py-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-stone-400">
+              People
+            </div>
+          )}
+          <button
+            data-idx={i}
+            role="option"
+            aria-selected={active === i}
+            onClick={() => pick(o.assignee)}
+            onMouseEnter={() => setActive(i)}
+            className={`flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-stone-700 ${
+              active === i ? "bg-brand-50" : ""
+            }`}
+          >
+            <span
+              className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-semibold ${
+                o.team
+                  ? "bg-brand-100 text-brand-700"
+                  : "bg-stone-200 text-stone-700"
+              }`}
+            >
+              {o.initials}
+            </span>
+            <span className="truncate">
+              {o.name}
+              {o.role && <span className="text-stone-400"> · {o.role}</span>}
+            </span>
+          </button>
+        </div>
       ))}
     </div>,
     document.body

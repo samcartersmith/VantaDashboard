@@ -9,6 +9,7 @@ import {
   SEVERITY_LABEL,
   STATUS_LABEL,
 } from "../../lib/format";
+import { DensityToggle } from "./DensityToggle";
 
 function useOutside(onClose: () => void) {
   const ref = useRef<HTMLDivElement>(null);
@@ -207,7 +208,8 @@ export function FeedToolbar({ showStatus }: { showStatus: boolean }) {
           <X size={12} /> Clear
         </button>
       ) : null}
-      <div className="ml-auto">
+      <div className="ml-auto flex items-center gap-3">
+        <DensityToggle />
         <SortMenu />
       </div>
     </div>
