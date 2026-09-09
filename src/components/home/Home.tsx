@@ -2,10 +2,12 @@ import { useMemo } from "react";
 import { CalendarClock } from "lucide-react";
 import { useAppStore } from "../../store/useAppStore";
 import { applyFilters, roleScoped, sortItems } from "../../lib/select";
+import { useKeyboardNav } from "../../hooks/useKeyboardNav";
 import { RoleSwitcher } from "./RoleSwitcher";
 import { MetricsStrip } from "./MetricsStrip";
 import { FeedToolbar } from "./FeedToolbar";
 import { ActionFeed } from "./ActionFeed";
+import { KeyboardHint } from "./KeyboardHint";
 import { LeadershipView } from "../leadership/LeadershipView";
 
 const ROLE_COPY: Record<string, { title: string; sub: string }> = {
@@ -38,6 +40,16 @@ export function Home() {
   const copy = ROLE_COPY[role];
   const isLeadership = role === "LEADERSHIP";
   const selectable = role === "PROGRAM_QUEUE";
+
+  const hasActiveFilters =
+    filters.domains.size > 0 ||
+    filters.severities.size > 0 ||
+    filters.frameworks.size > 0 ||
+    filters.statuses.size > 0 ||
+    filters.auditBlockingOnly ||
+    filters.search.trim().length > 0;
+
+  useKeyboardNav(visible, !isLeadership);
 
   return (
     <div className="mx-auto max-w-5xl px-7 py-6">
@@ -76,8 +88,14 @@ export function Home() {
               <span className="text-[12px] text-stone-500">
                 {visible.length} {visible.length === 1 ? "item" : "items"}
               </span>
+              <KeyboardHint />
             </div>
-            <ActionFeed items={visible} selectable={selectable} />
+            <ActionFeed
+              items={visible}
+              selectable={selectable}
+              role={role}
+              filtered={hasActiveFilters}
+            />
           </div>
         </>
       )}

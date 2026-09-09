@@ -1,10 +1,11 @@
-import { useRef, useState } from "react";
-import { CheckCircle2, Clock, Inbox, UserPlus2, X } from "lucide-react";
-import type { ActionableItem } from "../../data/types";
+import { useEffect, useRef, useState } from "react";
+import { CheckCircle2, Clock, UserPlus2, X } from "lucide-react";
+import type { ActionableItem, Role } from "../../data/types";
 import { useAppStore } from "../../store/useAppStore";
 import { ActionRow } from "./ActionRow";
 import { SnoozeDialog } from "./SnoozeDialog";
 import { ReassignMenu } from "./ReassignMenu";
+import { EmptyState } from "./EmptyState";
 
 function BulkBar({ ids }: { ids: string[] }) {
   const clearSelection = useAppStore((s) => s.clearSelection);
@@ -73,9 +74,13 @@ function BulkBar({ ids }: { ids: string[] }) {
 export function ActionFeed({
   items,
   selectable,
+  role,
+  filtered,
 }: {
   items: ActionableItem[];
   selectable: boolean;
+  role: Role;
+  filtered: boolean;
 }) {
   const selection = useAppStore((s) => s.selection);
   const selectedIds = items
@@ -86,14 +91,7 @@ export function ActionFeed({
     <div className="overflow-hidden rounded-xl border border-stone-200 bg-white">
       {selectable && selectedIds.length > 0 && <BulkBar ids={selectedIds} />}
       {items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
-          <Inbox size={26} className="mb-2 text-stone-300" />
-          <p className="text-sm font-medium text-stone-700">You're all clear</p>
-          <p className="mt-1 text-[13px] text-stone-500">
-            No actionable items match this view. New items appear here as checks
-            fail.
-          </p>
-        </div>
+        <EmptyState role={role} filtered={filtered} />
       ) : (
         items.map((item) => (
           <ActionRow
@@ -103,6 +101,50 @@ export function ActionFeed({
           />
         ))
       )}
+      <KeyboardTriageDialogs />
     </div>
+  );
+}
+
+// Renders the Snooze dialog / Reassign menu when driven by the S / A hotkeys,
+// anchored to the currently focused row.
+function KeyboardTriageDialogs() {
+  const snoozeTargetId = useAppStore((s) => s.snoozeTargetId);
+  const reassignTargetId = useAppStore((s) => s.reassignTargetId);
+  const setSnoozeTarget = useAppStore((s) => s.setSnoozeTarget);
+  const setReassignTarget = useAppStore((s) => s.setReassignTarget);
+  const snoozeItem = useAppStore((s) => s.snoozeItem);
+  const reassign = useAppStore((s) => s.reassign);
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    setAnchorEl(
+      reassignTargetId
+        ? (document.querySelector(
+            `[data-item-id="${reassignTargetId}"]`
+          ) as HTMLElement | null)
+        : null
+    );
+  }, [reassignTargetId]);
+
+  return (
+    <>
+      {snoozeTargetId && (
+        <SnoozeDialog
+          onConfirm={(note, days) => {
+            snoozeItem(snoozeTargetId, note, days);
+            setSnoozeTarget(null);
+          }}
+          onClose={() => setSnoozeTarget(null)}
+        />
+      )}
+      {reassignTargetId && anchorEl && (
+        <ReassignMenu
+          anchorRef={{ current: anchorEl }}
+          onSelect={(a) => reassign(reassignTargetId, a)}
+          onClose={() => setReassignTarget(null)}
+        />
+      )}
+    </>
   );
 }

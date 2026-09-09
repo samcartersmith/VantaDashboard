@@ -56,6 +56,8 @@ export function ActionRow({
 }) {
   const openTicket = useAppStore((s) => s.openTicket);
   const modal = useAppStore((s) => s.modal);
+  const density = useAppStore((s) => s.density);
+  const focusedId = useAppStore((s) => s.focusedId);
   const selection = useAppStore((s) => s.selection);
   const toggleSelect = useAppStore((s) => s.toggleSelect);
   const resolveItem = useAppStore((s) => s.resolveItem);
@@ -68,6 +70,8 @@ export function ActionRow({
   const reassignAnchor = useRef<HTMLDivElement>(null);
 
   const selected = selection.has(item.actionable_item_id);
+  const focused = focusedId === item.actionable_item_id;
+  const comfortable = density === "COMFORTABLE";
   const isOpen =
     modal?.kind === "ticket" && modal.id === item.actionable_item_id;
   const overdue = isOverdue(item.due_date) && item.status !== "RESOLVED";
@@ -84,9 +88,16 @@ export function ActionRow({
 
   return (
     <div
+      data-item-id={item.actionable_item_id}
       onClick={() => openTicket(item.actionable_item_id)}
-      className={`group relative flex cursor-pointer items-center gap-3 border-b border-stone-100 px-3 py-2.5 last:border-b-0 ${
-        isOpen ? "bg-brand-50" : "hover:bg-stone-50"
+      className={`group relative flex cursor-pointer items-center gap-3 border-b border-stone-100 px-3 last:border-b-0 ${
+        comfortable ? "py-4" : "py-2.5"
+      } ${
+        focused
+          ? "bg-brand-50 ring-2 ring-inset ring-brand"
+          : isOpen
+          ? "bg-brand-50"
+          : "hover:bg-stone-50"
       } ${resolved ? "opacity-60" : ""}`}
     >
       {selectable && (
@@ -103,11 +114,20 @@ export function ActionRow({
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className="truncate text-[13px] font-medium text-stone-900">
+          <span
+            className={`truncate font-medium text-stone-900 ${
+              comfortable ? "text-[14px]" : "text-[13px]"
+            }`}
+          >
             {item.title}
           </span>
         </div>
-        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+        {comfortable && (
+          <p className="mt-1 truncate text-[12px] text-stone-500">
+            {item.description}
+          </p>
+        )}
+        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
           <SeverityBadge severity={item.severity} />
           <DomainBadge domain={item.domain_source} />
           <FrameworkBadge framework={item.framework} />
