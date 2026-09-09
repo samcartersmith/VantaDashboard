@@ -98,6 +98,7 @@ interface AppState {
   focusedId: string | null; // keyboard-focused row
   snoozeTargetId: string | null; // keyboard-driven snooze dialog
   reassignTargetId: string | null; // keyboard-driven reassign menu
+  agentOpen: boolean; // Vanta Agent drawer
 
   setRole: (role: Role) => void;
   setSort: (sort: SortKey) => void;
@@ -106,6 +107,9 @@ interface AppState {
   setFocused: (id: string | null) => void;
   setSnoozeTarget: (id: string | null) => void;
   setReassignTarget: (id: string | null) => void;
+  openAgent: () => void;
+  closeAgent: () => void;
+  toggleAgent: () => void;
   openTicket: (id: string, backKey?: MetricKey) => void;
   openMetric: (key: MetricKey) => void;
   closeModal: () => void;
@@ -174,6 +178,7 @@ export const useAppStore = create<AppState>((set) => ({
   focusedId: null,
   snoozeTargetId: null,
   reassignTargetId: null,
+  agentOpen: false,
 
   setRole: (role) =>
     set((state) => ({
@@ -193,6 +198,9 @@ export const useAppStore = create<AppState>((set) => ({
   setFocused: (focusedId) => set(() => ({ focusedId })),
   setSnoozeTarget: (snoozeTargetId) => set(() => ({ snoozeTargetId })),
   setReassignTarget: (reassignTargetId) => set(() => ({ reassignTargetId })),
+  openAgent: () => set(() => ({ agentOpen: true })),
+  closeAgent: () => set(() => ({ agentOpen: false })),
+  toggleAgent: () => set((state) => ({ agentOpen: !state.agentOpen })),
   openTicket: (id, backKey) =>
     set(() => ({ modal: { kind: "ticket", id, backKey } })),
   openMetric: (key) => set(() => ({ modal: { kind: "metric", key } })),
